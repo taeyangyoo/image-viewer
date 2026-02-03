@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='20' width='80' height='60' rx='8' fill='%23222' stroke='%23444' stroke-width='4'/><circle cx='30' cy='40' r='10' fill='%23666'/><path d='M10 65 L40 45 L60 55 L85 35 L90 50 L90 72 Q90 80 82 80 L18 80 Q10 80 10 72Z' fill='%23888'/></svg>">
     <title>Image Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -75,6 +76,7 @@
                 0 0 100px -20px rgba(255, 150, 100, 0.15);
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                         box-shadow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         @media (min-width: 768px) {
@@ -101,10 +103,55 @@
             }
         }
 
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .qr-code {
+            background: #fff;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 20px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        @media (min-width: 768px) {
+            .qr-code {
+                padding: 28px;
+                border-radius: 20px;
+            }
+        }
+
+        .qr-code img {
+            display: block;
+        }
+
+        .qr-label {
+            font-size: 13px;
+            color: #86868b;
+            text-align: center;
+            max-width: 280px;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        @media (min-width: 768px) {
+            .qr-label {
+                font-size: 14px;
+                max-width: 360px;
+            }
+        }
+
         .error-container {
             text-align: center;
             padding: 40px 30px;
             max-width: 400px;
+            animation: fadeIn 0.4s ease-out;
         }
 
         @media (min-width: 768px) {
@@ -204,14 +251,6 @@
                 transform: scale(1);
             }
         }
-
-        .image-wrapper img {
-            animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .error-container {
-            animation: fadeIn 0.4s ease-out;
-        }
     </style>
 </head>
 <body>
@@ -224,6 +263,7 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         const imageUrl = params.get('url');
+        const qrUrl = params.get('qr');
         const wrapper = document.getElementById('wrapper');
         const loader = document.getElementById('loader');
 
@@ -262,7 +302,40 @@
             `;
         }
 
-        if (imageUrl) {
+        function showQR(url) {
+            loader.remove();
+            
+            const container = document.createElement('div');
+            container.className = 'qr-container';
+            
+            const qrBox = document.createElement('div');
+            qrBox.className = 'qr-code';
+            
+            const label = document.createElement('div');
+            label.className = 'qr-label';
+            label.textContent = url;
+            
+            container.appendChild(qrBox);
+            container.appendChild(label);
+            wrapper.appendChild(container);
+            
+            const size = Math.min(window.innerWidth, window.innerHeight) * 0.5;
+            const qrSize = Math.min(Math.max(size, 180), 300);
+            
+            new QRCode(qrBox, {
+                text: url,
+                width: qrSize,
+                height: qrSize,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Main
+        if (qrUrl) {
+            showQR(qrUrl);
+        } else if (imageUrl) {
             const img = document.createElement('img');
             img.src = imageUrl;
             img.alt = 'Image';
